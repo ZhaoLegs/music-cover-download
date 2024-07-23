@@ -1,0 +1,173 @@
+{\rtf1\ansi\ansicpg936\cocoartf2709
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>  \
+<html lang="en">  \
+<head>  \
+    <meta charset="UTF-8">  \
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  \
+    <title>Apple Music & Podcast Cover Downloader</title>  \
+    <style>  \
+        /* \uc0\u22522 \u26412 \u39029 \u38754 \u26679 \u24335  */  \
+        body \{  \
+            font-family: Arial, sans-serif;  \
+            max-width: 800px;  \
+            margin: 0 auto;  \
+            padding: 20px;  \
+            text-align: center;  \
+        \}  \
+        h1 \{  \
+            color: #333;  \
+            margin-bottom: 30px;  \
+        \}  \
+        /* \uc0\u25628 \u32034 \u26694 \u26679 \u24335  */  \
+        #search-container \{  \
+            margin-bottom: 30px;  \
+            width: 100%;  \
+        \}  \
+        #search-input \{  \
+            width: 100%;  \
+            padding: 12px;  \
+            font-size: 16px;  \
+            border: 2px solid #ddd;  \
+            outline: none;  \
+            transition: border-color 0.3s;  \
+            box-sizing: border-box;  \
+        \}  \
+        #search-input:focus \{  \
+            border-color: #007AFF;  \
+        \}  \
+        /* \uc0\u25628 \u32034 \u32467 \u26524 \u32593 \u26684 \u24067 \u23616  */  \
+        #results \{  \
+            display: grid;  \
+            grid-template-columns: repeat(4, 1fr);  \
+            gap: 15px;  \
+            width: 100%;  \
+        \}  \
+        /* \uc0\u23553 \u38754 \u22270 \u26679 \u24335  */  \
+        .cover \{  \
+            cursor: pointer;  \
+            transition: transform 0.2s;  \
+            position: relative;  \
+            overflow: hidden;  \
+        \}  \
+        .cover:hover \{  \
+            transform: scale(1.05);  \
+        \}  \
+        .cover img \{  \
+            width: 100%;  \
+            height: auto;  \
+            display: block;  \
+        \}  \
+        /* \uc0\u23553 \u38754 \u20449 \u24687 \u26679 \u24335  */  \
+        .cover-info \{  \
+            padding: 10px;  \
+            text-align: left;  \
+        \}  \
+        .album-name \{  \
+            font-weight: regular;  \
+            margin-bottom: 5px;  \
+            white-space: nowrap;  \
+            overflow: hidden;  \
+            text-overflow: ellipsis;  \
+        \}  \
+        .artist-name \{  \
+            font-size: 0.9em;  \
+            color: #666;  \
+            white-space: nowrap;  \
+            overflow: hidden;  \
+            text-overflow: ellipsis;  \
+        \}  \
+    </style>  \
+</head>  \
+<body>  \
+    <h1>Apple Music & Podcast Cover Downloader</h1>  \
+    <div id="search-container">  \
+        <input type="text" id="search-input" placeholder="Enter album or podcast name">  \
+    </div>  \
+    <div id="results"></div>  \
+\
+    <script>  \
+        // \uc0\u33719 \u21462 DOM\u20803 \u32032   \
+        const searchInput = document.getElementById('search-input');  \
+        const resultsContainer = document.getElementById('results');  \
+        let debounceTimer;  \
+\
+        // \uc0\u20026 \u25628 \u32034 \u36755 \u20837 \u26694 \u28155 \u21152 \u20107 \u20214 \u30417 \u21548 \u22120   \
+        searchInput.addEventListener('input', () => \{  \
+            clearTimeout(debounceTimer);  \
+            debounceTimer = setTimeout(search, 300); // 300ms\uc0\u24310 \u36831 \u65292 \u38450 \u25238   \
+        \});  \
+\
+        // \uc0\u25628 \u32034 \u20989 \u25968   \
+        function search() \{  \
+            const query = searchInput.value;  \
+            if (query.length < 2) \{  \
+                resultsContainer.innerHTML = '';  \
+                return;  \
+            \}  \
+\
+            // \uc0\u26500 \u24314 iTunes API\u25628 \u32034 URL  \
+            const url = `https://itunes.apple.com/search?term=$\{encodeURIComponent(query)\}&media=music,podcast&entity=album,podcast`;  \
+\
+            // \uc0\u21457 \u36865 API\u35831 \u27714   \
+            fetch(url)  \
+                .then(response => response.json())  \
+                .then(data => \{  \
+                    resultsContainer.innerHTML = '';  \
+                    // \uc0\u36941 \u21382 \u25628 \u32034 \u32467 \u26524 \u24182 \u21019 \u24314 DOM\u20803 \u32032   \
+                    data.results.forEach(item => \{  \
+                        const coverUrl = item.artworkUrl100.replace('100x100', '600x600');  \
+                        const div = document.createElement('div');  \
+                        div.className = 'cover';  \
+                        \
+                        const img = document.createElement('img');  \
+                        img.src = coverUrl;  \
+                        img.alt = item.collectionName || item.trackName;  \
+                        \
+                        const infoDiv = document.createElement('div');  \
+                        infoDiv.className = 'cover-info';  \
+\
+                        const albumName = document.createElement('div');  \
+                        albumName.className = 'album-name';  \
+                        albumName.textContent = item.collectionName || item.trackName;  \
+\
+                        const artistName = document.createElement('div');  \
+                        artistName.className = 'artist-name';  \
+                        artistName.textContent = item.artistName;  \
+                        \
+                        // \uc0\u32452 \u35013 DOM\u32467 \u26500   \
+                        infoDiv.appendChild(albumName);  \
+                        infoDiv.appendChild(artistName);  \
+                        \
+                        div.appendChild(img);  \
+                        div.appendChild(infoDiv);  \
+                        // \uc0\u28155 \u21152 \u28857 \u20987 \u20107 \u20214 \u30417 \u21548 \u22120 \u29992 \u20110 \u19979 \u36733   \
+                        div.addEventListener('click', () => downloadCover(coverUrl, item.collectionName || item.trackName));  \
+                        resultsContainer.appendChild(div);  \
+                    \});  \
+                \})  \
+                .catch(error => console.error('Error:', error));  \
+        \}  \
+\
+        // \uc0\u19979 \u36733 \u23553 \u38754 \u22270 \u29255 \u20989 \u25968   \
+        function downloadCover(url, name) \{  \
+            fetch(url)  \
+                .then(response => response.blob())  \
+                .then(blob => \{  \
+                    const link = document.createElement('a');  \
+                    link.href = URL.createObjectURL(blob);  \
+                    link.download = `$\{name.replace(/[^a-z0-9]/gi, '_').toLowerCase()\}_cover.jpg`;  \
+                    document.body.appendChild(link);  \
+                    link.click();  \
+                    document.body.removeChild(link);  \
+                \})  \
+                .catch(error => console.error('Download error:', error));  \
+        \}  \
+    </script>  \
+</body>  \
+</html>}
