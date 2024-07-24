@@ -3,9 +3,9 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>Apple Music & Podcast Cover Downloader</title>  
+    <title>Apple Music Cover Downloader</title>  
     <style>  
-        /* 基本页面样式 */  
+        /* 保持原有的样式不变 */  
         body {  
             font-family: Arial, sans-serif;  
             max-width: 800px;  
@@ -17,7 +17,6 @@
             color: #333;  
             margin-bottom: 30px;  
         }  
-        /* 搜索输入框样式 */  
         #search-container {  
             margin-bottom: 30px;  
             width: 100%;  
@@ -34,14 +33,12 @@
         #search-input:focus {  
             border-color: #007AFF;  
         }  
-        /* 搜索结果网格布局 */  
         #results {  
             display: grid;  
             grid-template-columns: repeat(4, 1fr);  
             gap: 15px;  
             width: 100%;  
         }  
-        /* 封面图样式 */  
         .cover {  
             cursor: pointer;  
             transition: transform 0.2s;  
@@ -58,7 +55,6 @@
             display: block;  
             object-fit: cover;  
         }  
-        /* 封面信息样式 */  
         .cover-info {  
             padding: 10px;  
             text-align: left;  
@@ -91,9 +87,9 @@
     </style>  
 </head>  
 <body>  
-    <h1>Apple Music & Podcast Cover Downloader</h1>  
+    <h1>Apple Music Cover Downloader</h1>  
     <div id="search-container">  
-        <input type="text" id="search-input" placeholder="Enter album or podcast name">  
+        <input type="text" id="search-input" placeholder="Enter album name">  
     </div>  
     <div id="results"></div>  
 
@@ -103,13 +99,11 @@
         let debounceTimer;  
         let cache = {};  
 
-        // 为搜索输入框添加输入事件监听器  
         searchInput.addEventListener('input', () => {  
             clearTimeout(debounceTimer);  
-            debounceTimer = setTimeout(search, 300); // 300ms延迟，实现防抖  
+            debounceTimer = setTimeout(search, 300);  
         });  
 
-        // 搜索函数  
         async function search() {  
             const query = searchInput.value.trim();  
             if (query.length < 2) {  
@@ -122,7 +116,8 @@
                 return;  
             }  
 
-            const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music,podcast&entity=album,podcast&limit=20`;  
+            // 修改 URL 以只包含音乐相关的内容  
+            const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=album&limit=20`;  
 
             try {  
                 const response = await fetch(url);  
@@ -134,7 +129,6 @@
             }  
         }  
 
-        // 渲染结果函数  
         function renderResults(results) {  
             resultsContainer.innerHTML = '';  
             const fragment = document.createDocumentFragment();  
@@ -145,21 +139,20 @@
                 div.className = 'cover';  
                 
                 div.innerHTML = `  
-                    <img src="${coverUrl}" alt="${item.collectionName || item.trackName}">  
+                    <img src="${coverUrl}" alt="${item.collectionName}">  
                     <div class="cover-info">  
-                        <div class="album-name">${item.collectionName || item.trackName}</div>  
+                        <div class="album-name">${item.collectionName}</div>  
                         <div class="artist-name">${item.artistName}</div>  
                     </div>  
                 `;  
                 
-                div.addEventListener('click', () => downloadCover(coverUrl, item.collectionName || item.trackName));  
+                div.addEventListener('click', () => downloadCover(coverUrl, item.collectionName));  
                 fragment.appendChild(div);  
             });  
 
             resultsContainer.appendChild(fragment);  
         }  
 
-        // 下载封面图片函数  
         async function downloadCover(url, name) {  
             try {  
                 const response = await fetch(url);  
@@ -175,9 +168,9 @@
             }  
         }  
 
-        // 预加载函数  
         function preload(query) {  
-            const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music,podcast&entity=album,podcast&limit=5`;  
+            // 修改预加载 URL 以只包含音乐相关的内容  
+            const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=album&limit=5`;  
             fetch(url)  
                 .then(response => response.json())  
                 .then(data => {  
@@ -186,7 +179,6 @@
                 .catch(error => console.error('Preload error:', error));  
         }  
 
-        // 添加输入事件监听器用于预加载  
         searchInput.addEventListener('input', (e) => {  
             const query = e.target.value.trim();  
             if (query.length >= 2) {  
