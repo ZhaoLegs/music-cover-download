@@ -47,33 +47,46 @@
             transition: transform 0.2s;  
             position: relative;  
             overflow: hidden;  
+            aspect-ratio: 1 / 1;  
         }  
         .cover:hover {  
             transform: scale(1.05);  
         }  
         .cover img {  
             width: 100%;  
-            height: auto;  
+            height: 100%;  
             display: block;  
+            object-fit: cover;  
         }  
         /* 封面信息样式 */  
         .cover-info {  
             padding: 10px;  
             text-align: left;  
+            background-color: rgba(0, 0, 0, 0.7);  
+            position: absolute;  
+            bottom: 0;  
+            left: 0;  
+            right: 0;  
+            transition: opacity 0.3s;  
+            opacity: 0;  
+            color: white;  
+        }  
+        .cover:hover .cover-info {  
+            opacity: 1;  
+        }  
+        .album-name, .artist-name {  
+            white-space: nowrap;  
+            overflow: hidden;  
+            text-overflow: ellipsis;  
         }  
         .album-name {  
             font-weight: bold;  
-            margin-bottom: 5px;  
-            white-space: nowrap;  
-            overflow: hidden;  
-            text-overflow: ellipsis;  
+            font-size: 0.9em;  
+            margin-bottom: 2px;  
         }  
         .artist-name {  
-            font-size: 0.9em;  
-            color: #666;  
-            white-space: nowrap;  
-            overflow: hidden;  
-            text-overflow: ellipsis;  
+            font-size: 0.8em;  
+            color: #ccc;  
         }  
     </style>  
 </head>  
