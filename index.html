@@ -98,10 +98,10 @@
     <div id="results"></div>  
 
     <script>  
-        // 获取DOM元素  
         const searchInput = document.getElementById('search-input');  
         const resultsContainer = document.getElementById('results');  
         let debounceTimer;  
+        let cache = {};  
 
         // 为搜索输入框添加输入事件监听器  
         searchInput.addEventListener('input', () => {  
@@ -110,69 +110,89 @@
         });  
 
         // 搜索函数  
-        function search() {  
-            const query = searchInput.value;  
+        async function search() {  
+            const query = searchInput.value.trim();  
             if (query.length < 2) {  
                 resultsContainer.innerHTML = '';  
                 return;  
             }  
 
-            // 构建iTunes API搜索URL  
-            const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music,podcast&entity=album,podcast`;  
+            if (cache[query]) {  
+                renderResults(cache[query]);  
+                return;  
+            }  
 
-            // 发送API请求  
-            fetch(url)  
-                .then(response => response.json())  
-                .then(data => {  
-                    resultsContainer.innerHTML = '';  
-                    // 遍历搜索结果并创建封面元素  
-                    data.results.forEach(item => {  
-                        const coverUrl = item.artworkUrl100.replace('100x100', '600x600');  
-                        const div = document.createElement('div');  
-                        div.className = 'cover';  
-                        
-                        const img = document.createElement('img');  
-                        img.src = coverUrl;  
-                        img.alt = item.collectionName || item.trackName;  
-                        
-                        const infoDiv = document.createElement('div');  
-                        infoDiv.className = 'cover-info';  
+            const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music,podcast&entity=album,podcast&limit=20`;  
 
-                        const albumName = document.createElement('div');  
-                        albumName.className = 'album-name';  
-                        albumName.textContent = item.collectionName || item.trackName;  
+            try {  
+                const response = await fetch(url);  
+                const data = await response.json();  
+                cache[query] = data.results;  
+                renderResults(data.results);  
+            } catch (error) {  
+                console.error('Error:', error);  
+            }  
+        }  
 
-                        const artistName = document.createElement('div');  
-                        artistName.className = 'artist-name';  
-                        artistName.textContent = item.artistName;  
-                        
-                        infoDiv.appendChild(albumName);  
-                        infoDiv.appendChild(artistName);  
-                        
-                        div.appendChild(img);  
-                        div.appendChild(infoDiv);  
-                        // 为封面添加点击事件，触发下载  
-                        div.addEventListener('click', () => downloadCover(coverUrl, item.collectionName || item.trackName));  
-                        resultsContainer.appendChild(div);  
-                    });  
-                })  
-                .catch(error => console.error('Error:', error));  
+        // 渲染结果函数  
+        function renderResults(results) {  
+            resultsContainer.innerHTML = '';  
+            const fragment = document.createDocumentFragment();  
+
+            results.forEach(item => {  
+                const coverUrl = item.artworkUrl100.replace('100x100', '600x600');  
+                const div = document.createElement('div');  
+                div.className = 'cover';  
+                
+                div.innerHTML = `  
+                    <img src="${coverUrl}" alt="${item.collectionName || item.trackName}">  
+                    <div class="cover-info">  
+                        <div class="album-name">${item.collectionName || item.trackName}</div>  
+                        <div class="artist-name">${item.artistName}</div>  
+                    </div>  
+                `;  
+                
+                div.addEventListener('click', () => downloadCover(coverUrl, item.collectionName || item.trackName));  
+                fragment.appendChild(div);  
+            });  
+
+            resultsContainer.appendChild(fragment);  
         }  
 
         // 下载封面图片函数  
-        function downloadCover(url, name) {  
-            fetch(url)  
-                .then(response => response.blob())  
-                .then(blob => {  
-                    const link = document.createElement('a');  
-                    link.href = URL.createObjectURL(blob);  
-                    link.download = `${name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_cover.jpg`;  
-                    document.body.appendChild(link);  
-                    link.click();  
-                    document.body.removeChild(link);  
-                })  
-                .catch(error => console.error('Download error:', error));  
+        async function downloadCover(url, name) {  
+            try {  
+                const response = await fetch(url);  
+                const blob = await response.blob();  
+                const link = document.createElement('a');  
+                link.href = URL.createObjectURL(blob);  
+                link.download = `${name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_cover.jpg`;  
+                document.body.appendChild(link);  
+                link.click();  
+                document.body.removeChild(link);  
+            } catch (error) {  
+                console.error('Download error:', error);  
+            }  
         }  
+
+        // 预加载函数  
+        function preload(query) {  
+            const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music,podcast&entity=album,podcast&limit=5`;  
+            fetch(url)  
+                .then(response => response.json())  
+                .then(data => {  
+                    cache[query] = data.results;  
+                })  
+                .catch(error => console.error('Preload error:', error));  
+        }  
+
+        // 添加输入事件监听器用于预加载  
+        searchInput.addEventListener('input', (e) => {  
+            const query = e.target.value.trim();  
+            if (query.length >= 2) {  
+                preload(query);  
+            }  
+        });  
     </script>  
 </body>  
 </html>
